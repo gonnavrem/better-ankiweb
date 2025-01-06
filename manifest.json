@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "Better Ankiweb",
+    "version": "1.0",
+    "description": "Allows to hide text sections or change the font without modifying the deck",
+    "permissions": ["activeTab, scripting"],
+    "host_permissions": ["https://ankiweb.net/*"],
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://ankiweb.net/study/*"],
+        "js": ["content.js"],
+        "css": ["style.css"]
+      }
+    ]
+  }
+  
