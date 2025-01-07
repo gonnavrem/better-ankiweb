@@ -1,74 +1,98 @@
-// Función para agregar íconos de "mostrar/ocultar" a todos los nodos visibles
 function addToggleIconsToAllSections() {
-    // Selecciona el contenedor principal de la carta
     const cards = document.querySelectorAll("#qa");
 
-    if (cards.length === 0) {
-        console.log("No se encontraron cartas con el ID #qa.");
-        return;
-    }
+    const globalVisibilityState = JSON.parse(localStorage.getItem("globalVisibilityState")) || {};
 
     cards.forEach((card) => {
-        // Selecciona todos los nodos hijos del contenedor (texto y elementos)
         const childNodes = Array.from(card.childNodes);
 
         childNodes.forEach((node) => {
-            // Ignorar nodos no visuales (e.g., espacios en blanco, scripts, estilos)
+            // Ignore empty text nodes and style elements
             if (
-                (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) || // Nodos de texto vacíos
+                (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) ||
                 (node.nodeType === Node.ELEMENT_NODE &&
-                    (node.tagName === "STYLE" || node.tagName === "HR")) // Ignorar estilos y separadores
+                    (node.tagName === "STYLE" || node.tagName === "HR"))
             ) {
                 return;
             }
 
-            // Verifica si ya tiene un ícono para evitar duplicados
             if (node.dataset && node.dataset.processed) return;
 
-            // Manejo de nodos de texto
+
             if (node.nodeType === Node.TEXT_NODE) {
                 const span = document.createElement("span");
                 span.textContent = node.textContent.trim();
-                span.dataset.processed = true; // Marca como procesado
-                node.replaceWith(span); // Reemplaza el nodo de texto con un contenedor
-                node = span; // Actualiza la referencia al nuevo nodo
+                span.dataset.processed = true;
+                node.replaceWith(span);
+                node = span;
             }
 
-            // Crea el ícono
+            // Create a text container span if it doesn't exist so the eye icon can be added
+            let textContainer = node.querySelector(".text-container");
+            if (!textContainer) {
+                textContainer = document.createElement("span");
+                textContainer.classList.add("text-container");
+                textContainer.innerHTML = node.innerHTML;
+                node.innerHTML = "";
+                node.appendChild(textContainer);
+            }
+
+            const sectionClass = node.classList.length > 0 ? [...node.classList].join(" ") : "default-section";
+
+            if (globalVisibilityState[sectionClass]) {
+                textContainer.style.visibility = "hidden";
+            }
+
+            if (node.querySelector(".toggle-icon")) return; 
+
+            // Create the eye icon
             const icon = document.createElement("span");
             icon.classList.add("toggle-icon");
             icon.style.cursor = "pointer";
             icon.style.marginLeft = "10px";
-            icon.style.fontSize = "16px";
-            icon.innerHTML = "👁️"; // Ícono de "ojo"
+            icon.style.fontSize = "20px";
+            icon.style.pointerEvents = "auto";
+            icon.innerHTML = textContainer.style.visibility === "hidden" ? "🙈" : "👁️";
 
-            // Añade un evento de clic para mostrar/ocultar
-            icon.addEventListener("click", () => {
-                if (node.style.visibility === "hidden") {
-                    node.style.visibility = "visible";
-                    icon.innerHTML = "👁️"; // Cambia al ícono de "mostrar"
+            // Visibility toggle
+            icon.addEventListener("click", (event) => {
+                event.stopPropagation(); 
+
+                if (textContainer.style.visibility === "hidden") {
+                    textContainer.style.visibility = "visible";
+                    icon.innerHTML = "👁️";
+
+                    globalVisibilityState[sectionClass] = false;
                 } else {
-                    node.style.visibility = "hidden";
-                    icon.innerHTML = "🙈"; // Cambia al ícono de "ocultar"
+                    textContainer.style.visibility = "hidden";
+                    icon.innerHTML = "🙈";
+
+                    globalVisibilityState[sectionClass] = true;
                 }
+
+                localStorage.setItem("globalVisibilityState", JSON.stringify(globalVisibilityState));
             });
 
-            // Inserta el ícono después del contenido de la sección
+
+            if (!node.style.position || node.style.position === "static") {
+                node.style.position = "relative";
+            }
+
             node.appendChild(icon);
+            node.dataset.processed = true;
         });
     });
 }
 
-// Configura un observador para detectar cambios en el DOM
-const observer = new MutationObserver(() => {
-    addToggleIconsToAllSections();
+// The observer only detects changes in the buttons (ansarea)
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.target.id === "ansarea") {
+            addToggleIconsToAllSections();
+        }
+    });
 });
 
-// Inicia el observador en el cuerpo de la página
+addToggleIconsToAllSections();
+
 observer.observe(document.body, { childList: true, subtree: true });
-
-// Ejecuta la función una vez al cargar la página
-document.addEventListener("DOMContentLoaded", () => {
-    addToggleIconsToAllSections();
-    console.log("Script cargado y ejecutado.");
-});
