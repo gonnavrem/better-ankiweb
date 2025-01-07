@@ -5,8 +5,9 @@ function addToggleIconsToAllSections() {
 
     cards.forEach((card) => {
         const childNodes = Array.from(card.childNodes);
-
         childNodes.forEach((node) => {
+            let index = childNodes.indexOf(node);
+
             // Ignore empty text nodes and style elements
             if (
                 (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) ||
@@ -37,7 +38,7 @@ function addToggleIconsToAllSections() {
                 node.appendChild(textContainer);
             }
 
-            const sectionClass = node.classList.length > 0 ? [...node.classList].join(" ") : "default-section";
+            const sectionClass = node.classList.length > 0 ? [...node.classList].join(" ") : "default-section" + index;
 
             if (globalVisibilityState[sectionClass]) {
                 textContainer.style.visibility = "hidden";
