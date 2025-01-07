@@ -1,8 +1,11 @@
 {
     "manifest_version": 3,
-    "name": "Better Ankiweb",
+    "name": "Better AnkiWeb",
     "version": "1.0",
     "description": "Allows to hide text sections or change the font without modifying the deck",
+    "icons": {
+      "64": "icon64.png"
+    },
     "permissions": ["scripting"],
     "host_permissions": ["https://ankiweb.net/*"],
     "action": {
