@@ -19,7 +19,6 @@ function addToggleIconsToAllSections() {
 
             if (node.dataset && node.dataset.processed) return;
 
-
             if (node.nodeType === Node.TEXT_NODE) {
                 const span = document.createElement("span");
                 span.textContent = node.textContent.trim();
@@ -85,11 +84,73 @@ function addToggleIconsToAllSections() {
     });
 }
 
+let originalStyleContent = "";
+
+const styleObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.addedNodes.length > 0) {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE && node.matches("#qa > style")) {
+                    originalStyleContent = node.textContent;
+                    console.log("Original style content set via MutationObserver.");
+                    styleObserver.disconnect();
+                }
+            });
+        }
+    });
+});
+
+styleObserver.observe(document.body, { childList: true, subtree: true });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "changeFontFamily") {
+      const fontFamily = request.fontFamily;
+  
+      const styleTag = document.querySelector("#qa > style");
+      if (styleTag) {
+        if (request.fontFamily === "default") {
+            styleTag.textContent = originalStyleContent;
+            console.log("Font family changed to original.");
+        } else {
+            let styleRules = styleTag.textContent;
+  
+            styleRules = styleRules.replace(/font-family:[^;]+;/g, `font-family: ${fontFamily};`);
+            
+            localStorage.setItem("fontFamily", fontFamily);
+
+            styleTag.textContent = styleRules;
+      
+            console.log(`Font family changed to: ${fontFamily}`);
+        }
+      } else {
+        console.error("No style tag found inside #qa.");
+      }
+    }
+  });
+  
+
 // The observer only detects changes in the buttons (ansarea)
 const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.target.id === "ansarea") {
             addToggleIconsToAllSections();
+
+            const styleTag = document.querySelector("#qa > style");
+            const fontFamily = localStorage.getItem("fontFamily");
+                if (styleTag && fontFamily) {
+                    if (fontFamily === "default") {
+                        styleTag.textContent = originalStyleContent;
+                        console.log("Font family changed to original.");
+                    } else {
+                        let styleRules = styleTag.textContent;
+              
+                        styleRules = styleRules.replace(/font-family:[^;]+;/g, `font-family: ${fontFamily};`);
+            
+                        styleTag.textContent = styleRules;
+                  
+                        console.log(`Font family changed to: ${fontFamily}`);
+                    }
+                }
         }
     });
 });
