@@ -116,12 +116,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
             styleRules = styleRules.replace(/font-family:[^;]+;/g, `font-family: ${fontFamily};`);
             
-            localStorage.setItem("fontFamily", fontFamily);
+//            localStorage.setItem("fontFamily", fontFamily);
 
             styleTag.textContent = styleRules;
       
             console.log(`Font family changed to: ${fontFamily}`);
         }
+        localStorage.setItem("fontFamily", fontFamily);
       } else {
         console.error("No style tag found inside #qa.");
       }
