@@ -115,8 +115,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             let styleRules = styleTag.textContent;
   
             styleRules = styleRules.replace(/font-family:[^;]+;/g, `font-family: ${fontFamily};`);
-            
-//            localStorage.setItem("fontFamily", fontFamily);
 
             styleTag.textContent = styleRules;
       
